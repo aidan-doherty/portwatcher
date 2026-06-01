@@ -1,0 +1,43 @@
+# Binaries for programs and plugins
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+
+# Output from go test and other tools
+coverage.out
+*.out
+
+# Build directories
+/bin/
+/out/
+/dist/
+
+# Vendor directory (if you vendor deps)
+/vendor/
+
+# Go dependency directories and files (leave go.sum checked-in)
+Godeps/
+*.prof
+
+# IDEs and editors
+.vscode/
+.idea/
+*.iml
+*.sublime-workspace
+*.sublime-project
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+._*
