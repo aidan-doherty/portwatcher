@@ -1,0 +1,59 @@
+version: 2
+
+project_name: portlist
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - main: ./cmd/portlist
+    binary: portlist
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - formats: zip
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+    files:
+      - README.md
+
+checksum:
+  name_template: "checksums.txt"
+
+snapshot:
+  name_template: "{{ .Version }}-SNAPSHOT-{{ .ShortCommit }}"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+      - "^chore:"
+      - Merge pull request
+      - Merge branch
+
+release:
+  github:
+    owner: aidan-doherty
+    name: portlist
+  prerelease: auto
+  header: |
+    ## PortList {{ .Version }}
+
+    {{ .Summary }}
+  footer: |
+    **Full Changelog**: https://github.com/aidan-doherty/portlist/compare/{{ .PreviousTag }}...{{ .Tag }}
+
+nightly:
+  name_template: "nightly-{{ .ShortCommit }}"
