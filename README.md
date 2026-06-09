@@ -1,3 +1,28 @@
-A quick project made in an hour with AI assistance to play around with golang and TUIs
+# portlist
 
-<img width="1344" height="640" alt="image" src="https://github.com/user-attachments/assets/a2ef8496-3285-43ff-8c09-6f058227c4c9" />
+![Main view](screenshots/main.jpg)
+
+A TUI tool to list active network ports and their owning processes on Windows. Built with Go and [tview](https://github.com/rivo/tview).
+
+## Controls
+
+| Key | Action |
+|-----|--------|
+| `/` | Open search (filter by port or process name) |
+| `Esc` | Close search / clear filter |
+| `n` | Sort by process name |
+| `p` | Sort by port number |
+| `t` | Sort by protocol |
+| `o` | Toggle ascending/descending order |
+| `r` | Refresh (re-run `netstat`) |
+| `q` | Quit |
+
+## Usage
+
+```
+portlist.exe
+```
+
+Press `/` to start typing a search query — results filter in real-time as you type. Press `Esc` to clear the search and return to the full list.
+
+![Search active](screenshots/search.jpg)
