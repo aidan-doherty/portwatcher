@@ -44,11 +44,22 @@ func main() {
 	searchInput.SetFieldTextColor(tcell.ColorWhite)
 	searchInput.SetBackgroundColor(tcell.ColorDefault)
 
-	var loadAndRender func()
+	type row struct {
+		proto string
+		ip    string
+		port  uint16
+		pid   uint32
+		name  string
+		state string
+	}
+	var cachedRows []row
+
+	var loadData func()
+	var renderTable func()
 
 	searchInput.SetChangedFunc(func(text string) {
 		searchText = text
-		loadAndRender()
+		renderTable()
 	})
 
 	buildFlex := func() *tview.Flex {
@@ -62,8 +73,7 @@ func main() {
 		return flex
 	}
 
-	loadAndRender = func() {
-		table.Clear()
+	loadData = func() {
 		portsList, err := ports.GetPortList()
 		if err != nil {
 			footer.SetText("Error: " + err.Error())
@@ -84,18 +94,18 @@ func main() {
 
 		names, _ := proc.ProcessNames(pids)
 
-		type row struct {
-			proto string
-			ip    string
-			port  uint16
-			pid   uint32
-			name  string
-			state string
-		}
-		var rows []row
+		cachedRows = nil
 		for _, p := range portsList {
-			rows = append(rows, row{proto: p.Protocol, ip: p.LocalIP, port: p.LocalPort, pid: p.PID, name: names[p.PID], state: p.State})
+			cachedRows = append(cachedRows, row{proto: p.Protocol, ip: p.LocalIP, port: p.LocalPort, pid: p.PID, name: names[p.PID], state: p.State})
 		}
+
+		footer.SetText("Last refresh: " + time.Now().Format(time.RFC1123))
+	}
+
+	renderTable = func() {
+		table.Clear()
+
+		rows := append([]row(nil), cachedRows...)
 
 		cmp := func(i, j int) bool { return true }
 		switch sortField {
@@ -165,8 +175,6 @@ func main() {
 			}
 			return s
 		}())
-
-		footer.SetText("Last refresh: " + time.Now().Format(time.RFC1123))
 	}
 
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
@@ -189,23 +197,25 @@ func main() {
 			return nil
 		case 'n', 'N':
 			sortField = SortByProcess
-			loadAndRender()
+			renderTable()
 		case 'p', 'P':
 			sortField = SortByPort
-			loadAndRender()
+			renderTable()
 		case 't', 'T':
 			sortField = SortByProtocol
-			loadAndRender()
+			renderTable()
 		case 'o', 'O':
 			asc = !asc
-			loadAndRender()
+			renderTable()
 		case 'r', 'R':
-			loadAndRender()
+			loadData()
+			renderTable()
 		}
 		return event
 	})
 
-	loadAndRender()
+	loadData()
+	renderTable()
 
 	if err := app.SetRoot(buildFlex(), true).EnableMouse(true).Run(); err != nil {
 		panic(err)
