@@ -1,6 +1,6 @@
 version: 2
 
-project_name: portlist
+project_name: portwatcher
 
 before:
   hooks:
@@ -46,12 +46,12 @@ changelog:
 release:
   github:
     owner: aidan-doherty
-    name: portlist
+    name: portwatcher
   prerelease: auto
   header: |
     ## portlist {{ .Version }}
 
     {{ .Summary }}
   footer: |
-    **Full Changelog**: https://github.com/aidan-doherty/portlist/compare/{{ .PreviousTag }}...{{ .Tag }}
+    **Full Changelog**: https://github.com/aidan-doherty/portwatcher/compare/{{ .PreviousTag }}...{{ .Tag }}
 
