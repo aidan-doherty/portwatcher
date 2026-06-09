@@ -3,6 +3,7 @@ package main
 import (
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"ad/portlist/internals/ports"
@@ -24,7 +25,7 @@ func main() {
 	app := tview.NewApplication()
 
 	header := tview.NewTextView().SetDynamicColors(true)
-	header.SetBorder(true).SetTitle("portlist — Controls: [yellow]n[white]=name [yellow]p[white]=port [yellow]t[white]=protocol [yellow]r[white]=refresh [yellow]o[white]=order [yellow]q[white]=quit")
+	header.SetBorder(true).SetTitle("portlist — Controls: [yellow]/[white]=search [yellow]n[white]=name [yellow]p[white]=port [yellow]t[white]=protocol [yellow]r[white]=refresh [yellow]o[white]=order [yellow]q[white]=quit")
 
 	table := tview.NewTable().SetSelectable(true, false)
 	table.SetBorder(true).SetTitle("Ports")
@@ -32,15 +33,36 @@ func main() {
 	footer := tview.NewTextView().SetDynamicColors(true)
 	footer.SetBorder(true).SetTitle("Status")
 
-	flex := tview.NewFlex().SetDirection(tview.FlexRow).
-		AddItem(header, 3, 0, false).
-		AddItem(table, 0, 1, true).
-		AddItem(footer, 3, 0, false)
-
 	sortField := SortByPort
 	asc := true
 
-	loadAndRender := func() {
+	searchText := ""
+	searching := false
+	searchInput := tview.NewInputField()
+	searchInput.SetPlaceholder("Search by port or process name...")
+	searchInput.SetPlaceholderTextColor(tcell.ColorGray)
+	searchInput.SetFieldTextColor(tcell.ColorWhite)
+	searchInput.SetBackgroundColor(tcell.ColorDefault)
+
+	var loadAndRender func()
+
+	searchInput.SetChangedFunc(func(text string) {
+		searchText = text
+		loadAndRender()
+	})
+
+	buildFlex := func() *tview.Flex {
+		flex := tview.NewFlex().SetDirection(tview.FlexRow)
+		if searching {
+			flex.AddItem(searchInput, 1, 0, true)
+		}
+		flex.AddItem(header, 3, 0, false).
+			AddItem(table, 0, 1, true).
+			AddItem(footer, 3, 0, false)
+		return flex
+	}
+
+	loadAndRender = func() {
 		table.Clear()
 		portsList, err := ports.GetPortList()
 		if err != nil {
@@ -98,6 +120,17 @@ func main() {
 		}
 		sort.Slice(rows, cmp)
 
+		if searchText != "" {
+			lower := strings.ToLower(searchText)
+			var filtered []row
+			for _, rw := range rows {
+				if strings.Contains(strings.ToLower(rw.name), lower) || strings.Contains(strconv.Itoa(int(rw.port)), lower) {
+					filtered = append(filtered, rw)
+				}
+			}
+			rows = filtered
+		}
+
 		headers := []string{"Protocol", "Local IP", "Port", "PID", "Process", "State"}
 		for c, h := range headers {
 			table.SetCell(0, c, tview.NewTableCell("[::b]"+h).SetSelectable(false))
@@ -137,9 +170,23 @@ func main() {
 	}
 
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if searching {
+			if event.Key() == tcell.KeyEsc {
+				searching = false
+				searchText = ""
+				searchInput.SetText("")
+				app.SetRoot(buildFlex(), true).SetFocus(table)
+				return nil
+			}
+			return event
+		}
 		switch event.Rune() {
 		case 'q', 'Q':
 			app.Stop()
+		case '/':
+			searching = true
+			app.SetRoot(buildFlex(), true).SetFocus(searchInput)
+			return nil
 		case 'n', 'N':
 			sortField = SortByProcess
 			loadAndRender()
@@ -160,7 +207,7 @@ func main() {
 
 	loadAndRender()
 
-	if err := app.SetRoot(flex, true).EnableMouse(true).Run(); err != nil {
+	if err := app.SetRoot(buildFlex(), true).EnableMouse(true).Run(); err != nil {
 		panic(err)
 	}
 }
