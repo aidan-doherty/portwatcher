@@ -1,4 +1,4 @@
-module ad/portwatcher
+module ad/portlist
 
 go 1.26.4
 

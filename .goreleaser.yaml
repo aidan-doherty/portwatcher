@@ -49,11 +49,9 @@ release:
     name: portlist
   prerelease: auto
   header: |
-    ## PortList {{ .Version }}
+    ## portlist {{ .Version }}
 
     {{ .Summary }}
   footer: |
     **Full Changelog**: https://github.com/aidan-doherty/portlist/compare/{{ .PreviousTag }}...{{ .Tag }}
 
-nightly:
-  name_template: "nightly-{{ .ShortCommit }}"

@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	"ad/portwatcher/internals/ports"
-	proc "ad/portwatcher/internals/process"
+	"ad/portlist/internals/ports"
+	proc "ad/portlist/internals/process"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -24,7 +24,7 @@ func main() {
 	app := tview.NewApplication()
 
 	header := tview.NewTextView().SetDynamicColors(true)
-	header.SetBorder(true).SetTitle("PortWatcher — Controls: [yellow]n[white]=name [yellow]p[white]=port [yellow]t[white]=protocol [yellow]r[white]=refresh [yellow]o[white]=order [yellow]q[white]=quit")
+	header.SetBorder(true).SetTitle("portlist — Controls: [yellow]n[white]=name [yellow]p[white]=port [yellow]t[white]=protocol [yellow]r[white]=refresh [yellow]o[white]=order [yellow]q[white]=quit")
 
 	table := tview.NewTable().SetSelectable(true, false)
 	table.SetBorder(true).SetTitle("Ports")
