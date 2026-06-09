@@ -20,12 +20,14 @@ builds:
       - arm64
 
 archives:
-  - formats: zip
+  - id: zip
+    formats: zip
     name_template: >-
       {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
     files:
       - README.md
-  - formats: binary
+  - id: binary
+    formats: binary
     name_template: >-
       {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
 
