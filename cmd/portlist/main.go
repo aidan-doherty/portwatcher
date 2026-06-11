@@ -62,6 +62,12 @@ func main() {
 		renderTable()
 	})
 
+	searchInput.SetDoneFunc(func(key tcell.Key) {
+		if key == tcell.KeyEnter {
+			app.SetFocus(table)
+		}
+	})
+
 	buildFlex := func() *tview.Flex {
 		flex := tview.NewFlex().SetDirection(tview.FlexRow)
 		if searching {
@@ -185,6 +191,29 @@ func main() {
 				searchInput.SetText("")
 				app.SetRoot(buildFlex(), true).SetFocus(table)
 				return nil
+			}
+			if event.Rune() == '/' && app.GetFocus() != searchInput {
+				app.SetFocus(searchInput)
+				return nil
+			}
+			if app.GetFocus() != searchInput {
+				switch event.Rune() {
+				case 'n', 'N':
+					sortField = SortByProcess
+					renderTable()
+				case 'p', 'P':
+					sortField = SortByPort
+					renderTable()
+				case 't', 'T':
+					sortField = SortByProtocol
+					renderTable()
+				case 'o', 'O':
+					asc = !asc
+					renderTable()
+				case 'r', 'R':
+					loadData()
+					renderTable()
+				}
 			}
 			return event
 		}
