@@ -16,8 +16,8 @@ type PortInfo struct {
 	State     string
 }
 
-// GetPortList runs `netstat -ano` and parses TCP/UDP listeners/connections.
-func GetPortList() ([]PortInfo, error) {
+// GetPortListNetstat runs `netstat -ano` and parses TCP/UDP listeners/connections.
+func GetPortListNetstat() ([]PortInfo, error) {
 	cmd := exec.Command("netstat", "-ano")
 	out, err := cmd.Output()
 	if err != nil {

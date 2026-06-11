@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"sort"
 	"strconv"
 	"strings"
@@ -22,6 +23,9 @@ const (
 )
 
 func main() {
+	useNetstat := flag.Bool("netstat", false, "use netstat instead of Win32 API")
+	flag.Parse()
+
 	app := tview.NewApplication()
 
 	header := tview.NewTextView().SetDynamicColors(true)
@@ -54,6 +58,8 @@ func main() {
 	}
 	var cachedRows []row
 
+	var refreshTimer *time.Timer
+
 	var loadData func()
 	var renderTable func()
 
@@ -80,7 +86,13 @@ func main() {
 	}
 
 	loadData = func() {
-		portsList, err := ports.GetPortList()
+		var portsList []ports.PortInfo
+		var err error
+		if *useNetstat {
+			portsList, err = ports.GetPortListNetstat()
+		} else {
+			portsList, err = ports.GetPortList()
+		}
 		if err != nil {
 			footer.SetText("Error: " + err.Error())
 			return
@@ -211,8 +223,15 @@ func main() {
 					asc = !asc
 					renderTable()
 				case 'r', 'R':
-					loadData()
-					renderTable()
+					if refreshTimer != nil {
+						refreshTimer.Stop()
+					}
+					refreshTimer = time.AfterFunc(150*time.Millisecond, func() {
+						app.QueueUpdateDraw(func() {
+							loadData()
+							renderTable()
+						})
+					})
 				}
 			}
 			return event
@@ -237,8 +256,15 @@ func main() {
 			asc = !asc
 			renderTable()
 		case 'r', 'R':
-			loadData()
-			renderTable()
+			if refreshTimer != nil {
+				refreshTimer.Stop()
+			}
+			refreshTimer = time.AfterFunc(150*time.Millisecond, func() {
+				app.QueueUpdateDraw(func() {
+					loadData()
+					renderTable()
+				})
+			})
 		}
 		return event
 	})
