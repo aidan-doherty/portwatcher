@@ -195,6 +195,42 @@ func main() {
 		}())
 	}
 
+	refreshData := func() {
+		var plist []ports.PortInfo
+		var err error
+		if *useNetstat {
+			plist, err = ports.GetPortListNetstat()
+		} else {
+			plist, err = ports.GetPortList()
+		}
+
+		pidSet := make(map[uint32]struct{})
+		var pids []uint32
+		for _, p := range plist {
+			if p.PID == 0 {
+				continue
+			}
+			if _, ok := pidSet[p.PID]; !ok {
+				pidSet[p.PID] = struct{}{}
+				pids = append(pids, p.PID)
+			}
+		}
+		names, _ := proc.ProcessNames(pids)
+
+		app.QueueUpdateDraw(func() {
+			if err != nil {
+				footer.SetText("Error: " + err.Error())
+				return
+			}
+			cachedRows = nil
+			for _, p := range plist {
+				cachedRows = append(cachedRows, row{proto: p.Protocol, ip: p.LocalIP, port: p.LocalPort, pid: p.PID, name: names[p.PID], state: p.State})
+			}
+			footer.SetText("Last refresh: " + time.Now().Format(time.RFC1123))
+			renderTable()
+		})
+	}
+
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if searching {
 			if event.Key() == tcell.KeyEsc {
@@ -228,9 +264,9 @@ func main() {
 					}
 					refreshTimer = time.AfterFunc(150*time.Millisecond, func() {
 						app.QueueUpdateDraw(func() {
-							loadData()
-							renderTable()
+							footer.SetText("[yellow::b]⟳ Refreshing...[-:-:-]")
 						})
+						go refreshData()
 					})
 				}
 			}
@@ -261,9 +297,9 @@ func main() {
 			}
 			refreshTimer = time.AfterFunc(150*time.Millisecond, func() {
 				app.QueueUpdateDraw(func() {
-					loadData()
-					renderTable()
+					footer.SetText("[yellow::b]⟳ Refreshing...[-:-:-]")
 				})
+				go refreshData()
 			})
 		}
 		return event
